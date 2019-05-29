@@ -1,8 +1,0 @@
-syn keyword CTagsStructure tableSize __anon478849880208 __anon478849880408
-syn keyword CTagsMember intValue string size col datas tableSize isNum raw strLen isInt capicity floatValue
-syn keyword CTagsUnion __anon47884988030a __anon47884988010a
-syn keyword CTagsGlobalVariable data
-syn keyword CTagsFunction data
-syn keyword CTagsDefinedName __DATA_H_
-syn keyword CTagsClass table item line data
-
