@@ -1,0 +1,34 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	0.0.0	/3fdf28bc/
+__DATA_H_	include/data.h	/^#define __DATA_H_$/;"	d
+__anon47884988010a	include/data.h	/^	union{$/;"	u	class:data
+__anon478849880208	include/data.h	/^		struct {\/\/It's a number!$/;"	s	union:data::__anon47884988010a
+__anon47884988030a	include/data.h	/^			union{$/;"	u	struct:data::__anon47884988010a::__anon478849880208
+__anon478849880408	include/data.h	/^		struct {\/\/It's not a number!$/;"	s	union:data::__anon47884988010a
+capicity	include/data.h	/^	int capicity;$/;"	m	class:line	typeref:typename:int
+col	include/data.h	/^			int col;$/;"	m	struct:table::tableSize	typeref:typename:int
+data	include/data.h	/^class data{$/;"	c
+data	include/data.h	/^	data():isNum(1),isInt(1),intValue(0)$/;"	f	class:data
+data	include/data.h	/^	data(char *_string,int _strLen):isNum(0),string(_string),strLen(_strLen)$/;"	f	class:data
+data	include/data.h	/^	data(float val):isNum(1),isInt(0),floatValue(val)$/;"	f	class:data
+data	include/data.h	/^	data(int val):isNum(1),isInt(1),intValue(val)$/;"	f	class:data
+datas	include/data.h	/^	data *datas;$/;"	m	class:line	typeref:typename:data *
+data	include/data.h	/^}data;$/;"	v	typeref:class:data
+floatValue	include/data.h	/^				double floatValue;\/\/It's a interger!$/;"	m	union:data::__anon47884988010a::__anon478849880208::__anon47884988030a	typeref:typename:double
+intValue	include/data.h	/^				int intValue;\/\/It's not a interger!$/;"	m	union:data::__anon47884988010a::__anon478849880208::__anon47884988030a	typeref:typename:int
+isInt	include/data.h	/^			bool isInt;\/\/Is it a interger?$/;"	m	struct:data::__anon47884988010a::__anon478849880208	typeref:typename:bool
+isNum	include/data.h	/^	bool isNum;\/\/Is it is a number?$/;"	m	class:data	typeref:typename:bool
+item	include/data.h	/^class item{$/;"	c
+line	include/data.h	/^class line{$/;"	c
+raw	include/data.h	/^			int raw;$/;"	m	struct:table::tableSize	typeref:typename:int
+size	include/data.h	/^	int size;$/;"	m	class:line	typeref:typename:int
+strLen	include/data.h	/^			int strLen;$/;"	m	struct:data::__anon47884988010a::__anon478849880408	typeref:typename:int
+string	include/data.h	/^			char *string;$/;"	m	struct:data::__anon47884988010a::__anon478849880408	typeref:typename:char *
+tableSize	include/data.h	/^		} tableSize;$/;"	m	class:table	typeref:struct:table::tableSize
+tableSize	include/data.h	/^		struct tableSize{$/;"	s	class:table
+table	include/data.h	/^class table{$/;"	c
