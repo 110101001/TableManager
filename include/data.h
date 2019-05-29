@@ -1,10 +1,11 @@
 #ifndef __DATA_H_
 #define __DATA_H_
+
 //data itself
 class data{
 	friend class table;	
 	public:
-	data():isNum(1),isInt(1),intValue(0)
+	data():isNum(0),string(0),strLen(0)
 	{}
 	data(int val):isNum(1),isInt(1),intValue(val)
 	{}
@@ -14,6 +15,9 @@ class data{
 	{}
 	~data();
 
+	char *str();
+
+	bool isEmpty();
 
 	protected:
 	bool isNum;//Is it is a number?
@@ -34,16 +38,23 @@ class data{
 
 //List of data in a table
 class item{
-
+	public:
+		char *str;
+		int strLen;
 };
 
 //A line of data
 class line{
+	public:
+		line(class data *_datas,int _dataNum);
+		line();
+		~line();
+
+		class data operator[](int col);
 	private:
 	int size;
 	int capicity;
-	data *datas;
-	public:
+	class data *datas;
 
 };
 
@@ -106,6 +117,8 @@ class table{
 		int searchItem(char *name,int strLen);//search item by name, return position
 		class table *searchData(int itemPosition,class data,int lowerRange=0,int upperRange=0);//search by Data, return a table including all search results
 		class table *replaceData(int itemPosition,class data,class newData,int lowerRange=0,int upperRange=0);//replace data, return a table including all search results
+
+		class line operator[](int row);
 };
 
 
