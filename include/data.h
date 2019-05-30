@@ -1,40 +1,48 @@
 #ifndef __DATA_H_
 #define __DATA_H_
 
+enum{intVal,doubleVal,stringVal};
+
 //data itself
 class data{
-	friend class table;	
+	//friend class table;	
 	public:
-	data():isNum(0),string(0),strLen(0)
-	{}
-	data(int val):isNum(1),isInt(1),intValue(val)
-	{}
-	data(float val):isNum(1),isInt(0),floatValue(val)
-	{}
-	data(char *_string,int _strLen):isNum(0),string(_string),strLen(_strLen)
-	{}
-	~data();
+		data():isNum(0),str(0),strLen(0){}
 
-	char *str();
+		data(int val):isNum(1),isInt(1),intValue(val){}
+		
+		data(double val):isNum(1),isInt(0),floatValue(val){}
 
-	bool isEmpty();
+		data(char *_string,int _strLen);
+
+		~data();
+/*
+		void editData(int val);
+
+		void editData(double val);
+
+		void editData(char *_string,int strlen);
+*/
+		char *Str();
+
+		bool isEmpty();
 
 	protected:
-	bool isNum;//Is it is a number?
-	union{
-		struct {//It's a number!
-			bool isInt;//Is it a interger?
-			union{
-				double floatValue;//It's a interger!
-				int intValue;//It's not a interger!
+		bool isNum;//Is it is a number?
+		union{
+			struct {//It's a number!
+				bool isInt;//Is it a interger?
+				union{
+					double floatValue;//It's a interger!
+					int intValue;//It's not a interger!
+				};
+			};
+			struct {//It's not a number!
+				char *str;
+				int strLen;
 			};
 		};
-		struct {//It's not a number!
-			char *string;
-			int strLen;
-		};
-	};
-}data;
+};
 
 //List of data in a table
 class item{
@@ -52,9 +60,9 @@ class line{
 
 		class data operator[](int col);
 	private:
-	int size;
-	int capicity;
-	class data *datas;
+		int size;
+		int capicity;
+		class data *datas;
 
 };
 
@@ -105,7 +113,7 @@ class table{
 
 		int saveTable();//Save the table to it's original file, return 0 if success
 		int saveTable(char *fileName);//Save the table to certain file,
-		
+
 		int insertItem(class item newItem);//insert a list of data, return 0 if success
 		int insertData(int position, class line);//insert a line of data, return 0 if success
 

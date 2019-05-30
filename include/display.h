@@ -2,7 +2,8 @@
 #define __DISPLAY_H_
 
 void initDisplay();
+void displayLoop();
 
-void displayMatrix(const class &mitrix);
+void displayMatrix(const class table &matrix);
 
 #endif
