@@ -1,9 +1,9 @@
 lib = -lcurses
 idir = -I include/ -I . 
-srcs = src/data.cpp src/display.cpp
+srcs = src/*.cpp
 
 VIM: main.cpp $(srcs)
-	g++ -o VIM main.cpp $(srcs) $(lib) $(idir)
+	g++ -o VIM main.cpp $(srcs) $(lib) $(idir) -g
 
 
 #build/src.o: $(srcs)

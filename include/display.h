@@ -1,9 +1,9 @@
 #ifndef __DISPLAY_H_
 #define __DISPLAY_H_
-
+#include "data.h"
 void initDisplay();
 void displayLoop();
 
-void displayMatrix(const class table &matrix);
+line *displayTable(const table &target,int x,int y);
 
 #endif

@@ -3,4 +3,8 @@
 
 #define MAX_DATA_LENGTH 10
 
+#define STATUS_WIDTH 30
+
+#define INDEX_INTERVAL 100
+
 #endif

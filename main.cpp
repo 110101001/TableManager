@@ -1,5 +1,6 @@
 #include<iostream>
 #include "include/display.h"
+#include "data.h"
 
 using namespace std;
 
