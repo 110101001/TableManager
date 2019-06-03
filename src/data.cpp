@@ -67,9 +67,14 @@ void data::editData(char *_string,int strlen){
 
 char *data::Str(){
 	char *temp;
-	temp=(char *)malloc(sizeof(char)*MAX_DATA_LENGTH);
+	temp=new char[MAX_DATA_LENGTH];
 	if(isNum==false){
-		strncpy(temp,str,MAX_DATA_LENGTH);
+		if(str!=0){
+			strncpy(temp,str,MAX_DATA_LENGTH);
+		}
+		else{
+			temp[0]=0;
+		}
 	}
 	else{
 		if(isInt==false){
@@ -99,7 +104,6 @@ class data *readString(char *s){
 	for(i=0;s[i]!=0;i++){
 		if((s[i]<'0'||s[i]>'9')&&s[i]!='.'){
 			Num=false;
-			break;
 		}
 		if(s[i]=='.'){
 			point=true;

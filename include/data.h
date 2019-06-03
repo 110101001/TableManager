@@ -46,6 +46,9 @@ class data{
 
 class data *readString(char *s);
 
+struct indexPointer;
+typedef struct indexPointer indexPointer;
+
 //A line of data
 class line{
 	public:
@@ -55,10 +58,14 @@ class line{
 		line(int _size,class data repeat);
 		~line();
 
+		int insertData(int pos,class data* dataPt);
+		int deleteData(int pos);
+
 		data* operator[](int col);
 
 		class line *next;
 		class line *prev;
+		indexPointer *parents;
 	private:
 		int size;
 		int capicity;
@@ -71,14 +78,16 @@ typedef struct item{
 		int strLen;
 }item;
 
-typedef struct indexPointer{
+struct indexPointer{
 	union{
 		struct indexPointer *indexPt;
 		line *linePt;
 	};
 	struct indexPointer *next;
+	struct indexPointer *parents;
 	int increase;
-}indexPointer;
+};
+
 //The whole table
 class table{
 	/*This class is the table and all operations are based on it.
@@ -98,7 +107,7 @@ class table{
 	/*---------------------------------------------------------------------------
 	 *Title: title0,title1,title2,title3
 	 *---------------------------------------------------------------------------
-	 *  index10<-index00->line0: data0,data1,data2,data3
+	 *  index10, index00->line0: data0,data1,data2,data3
 	 *	 |		 |		  |
 	 *	 |		 |		  v
 	 *	 |		 |		  line1: data0,data1,data2,data3
@@ -136,7 +145,7 @@ class table{
 			int row;
 			int col;
 		} tableSize;
-		class item *items;
+		class item **items;
 
 		table():tableSize({0,0}),items(0),lineHead(0){}//construct a empty table
 		table(char *_fileName);//construct a table by a file
@@ -147,8 +156,9 @@ class table{
 		int saveTable();//Save the table to it's original file, return 0 if success
 		int saveTable(char *fileName);//Save the table to certain file,
 
-		int insertItem(class item newItem);//insert a list of data, return 0 if success
-		int insertData(int position, class line);//insert a line of data, return 0 if success
+		int insertItem(int position,class item *newItem,class data repeat);//insert a list of data, return 0 if success
+		int insertData(class line* after, class line* newLine);//insert a list of data after "after", return 0 if success
+		int insertData(int position, class line *newLine);//insert a line of data, return 0 if success
 
 		int deleteItem(int position);//delete a list of data, return 0 if success
 		int deleteData(int position);//delete a line of data, return 0 if success
