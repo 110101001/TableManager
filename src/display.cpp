@@ -52,7 +52,9 @@ line *displayTable(int x,int y){
 	}
 	posy+=MAX_DATA_LENGTH;
 	for(int i=y;i<edgey;i++){
-		mvwaddstr(tableWindow,posx,posy+(i-y)*MAX_DATA_LENGTH,displaying->items[i]->str);
+		if(displaying->items[i]->str!=0){
+			mvwaddstr(tableWindow,posx,posy+(i-y)*MAX_DATA_LENGTH,displaying->items[i]->str);
+		}
 	}
 	posx++;
 	line *firstLine=(*displaying)[x];
@@ -140,35 +142,21 @@ void moveCur(int key){
 			}
 			break;
 	}
-	wmove(tableWindow,1+curx,10*(1+cury));
+	wmove(tableWindow,1+curx,1+10*(1+cury));
 	wrefresh(tableWindow);
 }
 
 void displayLoop(){
 	int input;
+	line *present;
+	data emptyData;
 	x=0,y=0;
 	curx=0,cury=0;
 	table test("test.csv");
-	data **td=new data*[6];
-	td[0]=new data("hahaha",7);
-	td[1]=new data(192);
-	td[2]=new data(60);
-	td[3]=new data(3.7);
-	td[4]=new data("Male",5);
-	td[5]=new data(12);
-	/*test.insertData(1000,new line(td,6));
-	test.insertData(870,new line(td,6));
-	test.insertData(400,new line(td,6));
-	test.insertData(60,new line(td,6));
-	test.insertData(123,new line(td,6));
-	test.insertData(234,new line(td,6));
-	test.insertData(924,new line(td,6));
-	test.insertData(145,new line(td,6));
-	test.insertData(650,new line(td,6));*/
-	test.insertData(13,new line(td,6));
 	test.updateIndex();
 	displaying=&test;
-	displayTable(x,y);
+	displaying->sortByItem(2,true);
+	present=displayTable(x,y);
 	displayStatus();
 	
 	while(true){
@@ -186,7 +174,32 @@ void displayLoop(){
 			case KEY_RIGHT:
 				moveCur(input);
 				  break;
-
+			case 'd':
+				input=getch();
+				switch(input){
+					case 'l':
+						if(curx+x!=0){
+							displaying->deleteData(curx+x-1);
+						}
+						break;
+					case 'c':
+						displaying->deleteItem(cury+y);
+						break;
+				}
+				present=displayTable(x,y);
+				break;
+			case 'n':
+				input=getch();
+				switch(input){
+					case 'l':
+						displaying->insertData(curx+x,new line(displaying->tableSize.col,emptyData));
+						break;
+					case 'c':
+						displaying->insertItem(cury+y,new item,emptyData);
+						break;
+				}
+				present=displayTable(x,y);
+				break;
 			case ':':
 
 				  break;

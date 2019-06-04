@@ -14,9 +14,15 @@ data::data(char *_string,int _strLen):isNum(0),strLen(_strLen){
 
 data::data(const class data &rhs){
 	if(rhs.isNum==false){
-		str=new char[rhs.strLen];
-		strcpy(str,rhs.str);
-		strLen=rhs.strLen;
+		if(rhs.str!=0){
+			str=new char[rhs.strLen];
+			strcpy(str,rhs.str);
+			strLen=rhs.strLen;
+		}
+		else{
+			str=0;
+			strLen=0;
+		}
 	}
 	else{
 		isNum=true;
@@ -36,6 +42,38 @@ data::~data(){
 	if(isNum==false&&str!=0){
 		delete[] str;
 	}
+}
+
+bool data::operator<(const class data &rhs){
+	if(rhs.isNum!=isNum){
+		if(rhs.isNum){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	else if(isNum&&rhs.isNum){
+		if(!(isInt||rhs.isInt)){
+			return rhs.floatValue>floatValue;
+		}
+		else if(isInt&&rhs.isInt){
+			return rhs.intValue>intValue;
+		}
+		else{
+			float a,b;
+			if(isInt){
+				return rhs.floatValue>intValue;
+			}
+			else{
+				return rhs.intValue>floatValue;
+			}
+		}
+	}
+	else{
+		return strcmp(rhs.str,str);
+	}
+	return false;//Shouldn't go here
 }
 
 void data::editData(int val){

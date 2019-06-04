@@ -5,14 +5,14 @@ using namespace std;
 
 int main(){
 	cout<<"name,height,weight,grade,sex,age"<<endl;
-	for(int i=0;i<1000;i++){
+	for(int i=0;i<8;i++){
 		for(int j=0;j<4;j++){
 			int num=rand()%26;
 			char output='a';
 			output+=(char)num;
 			cout<<output;
 		}
-		cout<<i;
+		cout<<i+1;
 		cout<<",";
 
 		int height=150+rand()%50;

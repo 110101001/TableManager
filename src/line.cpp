@@ -70,7 +70,7 @@ int line::deleteData(int pos){
 		return -1;
 	}
 	size--;
-	for(int i=pos;i<size-1;i++){
+	for(int i=pos;i<size;i++){
 		datas[i]=datas[i+1];
 	}	
 	return 0;

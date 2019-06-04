@@ -17,6 +17,8 @@ class data{
 
 		~data();
 
+		bool operator<(const class data &rhs);
+
 		void editData(int val);
 
 		void editData(double val);
@@ -140,6 +142,9 @@ class table{
 		indexPointer **index;
 		int indexDepth;
 		char *fileName;
+
+		void swapLine(line *a,line *b);
+		void quickSort(line *begin,line *end,int position,bool assending);
 	public:
 		struct tableSize{
 			int row;
@@ -162,6 +167,7 @@ class table{
 
 		int deleteItem(int position);//delete a list of data, return 0 if success
 		int deleteData(int position);//delete a line of data, return 0 if success
+		int deleteData(class line *del);//delete a line of data, return 0 if success
 
 		int sortByItem(int position,bool asending);//sort lines of data
 

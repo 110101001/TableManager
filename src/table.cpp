@@ -4,6 +4,7 @@
 #include <cmath>
 #include "settings.h"
 
+
 table::table(char *_fileName){
 	FILE *file;
 	int x=0,y=0;
@@ -152,9 +153,12 @@ line *table::locateLine(int targetRow){
 
 void table::updateIndex(){
 	if(index==0){
-		double depth=log10(tableSize.row);
+		double depth=log10(tableSize.row-1);
 		depth/=log10(INDEX_INTERVAL);
 		indexDepth=floor(depth);
+		if(indexDepth==0){
+			return;
+		}
 		index=new indexPointer*[indexDepth];
 		for(int i=0;i<indexDepth;i++){
 			index[i]=new indexPointer;
@@ -174,19 +178,27 @@ void table::updateIndex(){
 		indexPointer *prevPresent;
 		int presentCount=0;
 		int interval=pow(INDEX_INTERVAL,i+1);
-		while(present->next!=0){
-			indexPointer *par=present;
+		while(present->next!=0&&presentCount+interval<tableSize.row){
 			prevPresent=present;
 			present=present->next;
 			presentCount+=interval;
+
 			int adjust = present->increase-interval;
-			if(present->next!=0){
-				present->next->increase+=adjust;
-			}
+			indexPointer *par=present;
+			present->increase=interval;
 			while(par->parents!=0){
 				par=par->parents;
-				par->increase+=adjust;
+				par->increase-=adjust;
 			}
+			if(present->next!=0){
+				present->next->increase+=adjust;
+				par=present->next;
+				while(par->parents!=0){
+					par=par->parents;
+					par->increase-=adjust;
+				}
+			}
+
 			adjust/=(interval/INDEX_INTERVAL);
 			if(adjust>0){
 				if(i==0){
@@ -286,13 +298,15 @@ int table::insertData(int position, class line* newLine){
 		newLine->next=lineHead;
 		newLine->prev=0;
 		lineHead->prev=newLine;
-		lineHead->parents=index[0]->next;
 		lineHead=newLine;
-		index[0]->linePt=newLine;
-		indexPointer *present=index[0]->next;
-		while(present!=0){
-			present->increase++;
-			present=present->parents;
+		if(index!=0){
+			lineHead->next->parents=index[0]->next;
+			index[0]->linePt=newLine;
+			indexPointer *present=index[0]->next;
+			while(present!=0){
+				present->increase++;
+				present=present->parents;
+			}
 		}
 		tableSize.row++;
 		return 0;
@@ -309,22 +323,175 @@ int table::insertData(class line* after, class line* newLine){
 	newLine->next=before;
 	if(before!=0){
 		before->prev=newLine;
-		indexPointer *present=before->parents;
-		while(present!=0){
-			present->increase++;
-			present=present->parents;
+		if(index!=0){
+			indexPointer *present=before->parents;
+			while(present!=0){
+				present->increase++;
+				present=present->parents;
+			}
 		}
 	}
 	tableSize.row++;
 	return 0;
 }
 
+int table::deleteItem(int position){
+	if(position>tableSize.col-1||position<0){
+		return -1;
+	}	
+	tableSize.col--;
+	item **temp=new item*[tableSize.col];
+	for(int i=0;i<position;i++){
+		temp[i]=items[i];
+	}
+	for(int i=position;i<tableSize.col;i++){
+		temp[i]=items[i+1];
+	}
+	delete items[position];
+	delete[] items;
+	items=temp;
+	line *present=lineHead;
+	while(present!=0){
+		if(present->deleteData(position)){
+			return -1;
+		}
+		present=present->next;
+	}
+	return 0;
+	
+}
+
+int table::deleteData(int position){
+	if(position<0||position>tableSize.row-1){
+		return -1;
+	}
+	else if(position==0){
+		lineHead=lineHead->next;
+		delete lineHead->prev;	
+		if(index!=0){
+			lineHead->parents=index[0];
+			index[0]->linePt=lineHead;
+			indexPointer *present=index[0]->next;
+			while(present!=0){
+				present->increase--;
+				present=present->parents;
+			}
+		}
+		tableSize.row--;
+		return 0;
+	}
+	else{
+		return deleteData(locateLine(position));
+	}
+}
+
+int table::deleteData(class line* del){
+	del->prev->next=del->next;
+	if(del->next!=0){
+		del->next->prev=del->prev;
+		if(index!=0){
+			indexPointer *present=del->next->parents;
+			if(del->parents->linePt==del){
+				del->parents->linePt=del->next;
+				del->next->parents=del->parents;
+			}
+			while(present!=0){
+				present->increase--;
+				present=present->parents;
+			}
+		}
+	}
+	tableSize.row--;
+	return 0;
+}
+
+template<class T>
+void SWAP(T *&x,T *&y){
+	T *tempPt;
+	tempPt=x;
+	x=y;
+	y=tempPt;
+}
+
+void table::swapLine(line *a,line *b){
+	if(a->prev!=0){
+		a->prev->next=b;
+	}
+	if(b->prev!=0){
+		b->prev->next=a;
+	}
+	if(a->next!=0){
+		a->next->prev=b;
+	}
+	if(b->next!=0){
+		b->next->prev=a;
+	}
+	SWAP<line>(a->prev,b->prev);
+	SWAP<line>(a->next,b->next);
+	SWAP<indexPointer>(a->parents,b->parents);
+	if(a->parents!=0){
+		if(a->parents->linePt==b){
+			a->parents->linePt==a;
+		}
+	}
+	if(b->parents!=0){
+		if(b->parents->linePt==a){
+			b->parents->linePt==b;
+		}
+	}
+	if(lineHead==a){
+		lineHead=b;
+	}
+	else if(lineHead==b){
+		lineHead=a;
+	}
+}
+
+void table::quickSort(line *begin,line *end,int position,bool assending){
+	line *l=begin;
+	line *r=end;
+	line *lb=begin->prev;
+	line *rb=end->next;
+	if(begin==end){
+		return;
+	}
+	while(l!=r){
+		line *tempPt;
+		while(l!=r&&!(assending^(*((*l)[position])<(*(*r)[position])))){
+			r=r->prev;
+		}
+		if(l==r){
+			break;
+		}
+		swapLine(l,r);
+		SWAP<line>(l,r);
+		l=l->next;
+		while(l!=r&&!(assending^(*((*l)[position])<*((*r)[position])))){
+			l=l->next;
+		}
+		if(l==r){
+			break;
+		}
+		swapLine(l,r);
+		SWAP(l,r);
+		r=r->prev;
+	}
+	if(l->prev!=lb){
+		quickSort(lb->next,l->prev,position,assending);
+	}
+	if(r->next!=rb){
+		quickSort(l->next,rb->prev,position,assending);
+	}
+}
+
+int table::sortByItem(int position,bool assending){//QuickSort
+	line *begin=lineHead;
+	line *end=locateLine(tableSize.row-1);
+	quickSort(begin,end,position,assending);
+	return 0;
+}
+
 /*
-int table::deleteItem(int position);//delete a list of data, return 0 if success
-int table::deleteData(int position);//delete a line of data, return 0 if success
-
-int table::sortByItem(int position,bool asending);//sort lines of data
-
 int table::searchItem(char *name,int strLen);//search item by name, return position
 class table *table::searchData(int itemPosition,class data,int lowerRange=0,int upperRange=0);//search by Data, return a table including all search results
 class table *table::replaceData(int itemPosition,class data,class newData,int lowerRange=0,int upperRange=0);//replace data, return a table including all search results
