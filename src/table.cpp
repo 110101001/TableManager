@@ -414,29 +414,43 @@ void SWAP(T *&x,T *&y){
 }
 
 void table::swapLine(line *a,line *b){
-	if(a->prev!=0){
-		a->prev->next=b;
+	if(a->next!=b){
+		if(a->prev!=0){
+			a->prev->next=b;
+		}
+		if(b->prev!=0){
+			b->prev->next=a;
+		}
+		if(a->next!=0){
+			a->next->prev=b;
+		}
+		if(b->next!=0){
+			b->next->prev=a;
+		}
+		SWAP<line>(a->prev,b->prev);
+		SWAP<line>(a->next,b->next);
 	}
-	if(b->prev!=0){
-		b->prev->next=a;
+	else{
+		if(a->prev!=0){
+			a->prev->next=b;
+		}
+		if(b->next!=0){
+			b->next->prev=a;
+		}
+		b->prev=a->prev;	
+		a->prev=b;
+		a->next=b->next;
+		b->next=a;
 	}
-	if(a->next!=0){
-		a->next->prev=b;
-	}
-	if(b->next!=0){
-		b->next->prev=a;
-	}
-	SWAP<line>(a->prev,b->prev);
-	SWAP<line>(a->next,b->next);
 	SWAP<indexPointer>(a->parents,b->parents);
 	if(a->parents!=0){
 		if(a->parents->linePt==b){
-			a->parents->linePt==a;
+			a->parents->linePt=a;
 		}
 	}
 	if(b->parents!=0){
 		if(b->parents->linePt==a){
-			b->parents->linePt==b;
+			b->parents->linePt=b;
 		}
 	}
 	if(lineHead==a){
@@ -465,6 +479,12 @@ void table::quickSort(line *begin,line *end,int position,bool assending){
 		}
 		swapLine(l,r);
 		SWAP<line>(l,r);
+		if(begin==r){
+			begin=l;
+		}
+		if(end==l){
+			end=r;
+		}
 		l=l->next;
 		while(l!=r&&!(assending^(*((*l)[position])<*((*r)[position])))){
 			l=l->next;
@@ -474,13 +494,19 @@ void table::quickSort(line *begin,line *end,int position,bool assending){
 		}
 		swapLine(l,r);
 		SWAP(l,r);
+		if(begin==r){
+			begin=l;
+		}
+		if(end==l){
+			end=r;
+		}
 		r=r->prev;
 	}
-	if(l->prev!=lb){
-		quickSort(lb->next,l->prev,position,assending);
+	if(l!=begin){
+		quickSort(begin,l->prev,position,assending);
 	}
-	if(r->next!=rb){
-		quickSort(l->next,rb->prev,position,assending);
+	if(r!=end){
+		quickSort(l->next,end,position,assending);
 	}
 }
 

@@ -47,6 +47,7 @@ class data{
 };
 
 class data *readString(char *s);
+void readString(data *pt,char *s);
 
 struct indexPointer;
 typedef struct indexPointer indexPointer;

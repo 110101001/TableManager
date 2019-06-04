@@ -2,7 +2,10 @@
 #include "data.h"
 #include "settings.h"
 #include <ncurses.h>
+#include <cstring>
 #include <iostream>
+
+using namespace std;
 
 int tableWindowHeight;
 int tableWindowWidth;
@@ -79,16 +82,16 @@ line *displayTable(int x,int y){
 }
 
 void displayStatus(){
-		char displayStr[STATUS_WIDTH];
-		mvwaddstr(statusWindow,1,1,"Statistical Data");	
-		sprintf(displayStr,"COLS:%d",displaying->tableSize.col);
-		mvwaddstr(statusWindow,2,1,displayStr);	
-		sprintf(displayStr,"LINES:%d",displaying->tableSize.row);
-		mvwaddstr(statusWindow,3,1,displayStr);	
-		sprintf(displayStr,"TotalDataNum:%d",displaying->tableSize.col*displaying->tableSize.row);
-		mvwaddstr(statusWindow,4,1,displayStr);	
-		wrefresh(statusWindow);
-		return;	
+	char displayStr[STATUS_WIDTH];
+	mvwaddstr(statusWindow,1,1,"Statistical Data");	
+	sprintf(displayStr,"COLS:%d",displaying->tableSize.col);
+	mvwaddstr(statusWindow,2,1,displayStr);	
+	sprintf(displayStr,"LINES:%d",displaying->tableSize.row);
+	mvwaddstr(statusWindow,3,1,displayStr);	
+	sprintf(displayStr,"TotalDataNum:%d",displaying->tableSize.col*displaying->tableSize.row);
+	mvwaddstr(statusWindow,4,1,displayStr);	
+	wrefresh(statusWindow);
+	return;	
 }
 
 void moveCur(int key){
@@ -146,34 +149,92 @@ void moveCur(int key){
 	wrefresh(tableWindow);
 }
 
+void Err(){
+			mvwaddstr(commandWindow,1,1,"Out of range! Are you trying to trigger a segementation fault?");	
+			wrefresh(commandWindow);
+}
+
+int commandLine(){
+	char input[100];
+	char *emptyLine=new char[COLS-1];
+	for(int i=0;i<COLS;i++){
+		emptyLine[i]=' ';
+	}
+	emptyLine[COLS-2]=0;
+	mvwaddstr(commandWindow,1,1,emptyLine);	
+	mvwaddstr(commandWindow,1,1,":");	
+	wmove(commandWindow,1,2);
+	wrefresh(commandWindow);
+	nocbreak();
+	echo();
+	wscanw(commandWindow,"%s",&input);
+	if(0==strcmp(input,"q")){
+		return -1;
+	}
+	else if(0==strcmp(input,"j")){
+		int position;
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Jump to:");
+		wscanw(commandWindow,"%d",&position);
+		if(position<=displaying->tableSize.row&&position>0){
+			curx=1;
+			cury=0;
+			x=position-1;
+			wmove(tableWindow,1+curx,1+10*(1+cury));
+			displayTable(x,y);
+		}
+		else{
+			Err();
+		}
+	}
+	else if(0==strcmp(input,"sort")){
+		int position;
+		int ascending;
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Select column and ascending:");
+		wscanw(commandWindow,"%d %d",&position,&ascending);
+		if(position<=displaying->tableSize.col&&position>0){
+			mvwaddstr(commandWindow,1,1,emptyLine);	
+			displaying->sortByItem(position-1,ascending!=0);
+			displayTable(x,y);
+		}
+		else{
+			Err();
+		}
+	}
+	else if(0==strcmp(input,"update")){
+		displaying->updateIndex();
+	}
+	cbreak();
+	noecho();
+	return 0;
+}
+
 void displayLoop(){
 	int input;
-	line *present;
 	data emptyData;
 	x=0,y=0;
 	curx=0,cury=0;
 	table test("test.csv");
-	test.updateIndex();
 	displaying=&test;
-	displaying->sortByItem(2,true);
-	present=displayTable(x,y);
+	displayTable(x,y);
 	displayStatus();
-	
+
 	while(true){
 		input=getch();
 		switch(input){
 			case KEY_UP:
 				moveCur(input);
-				  break;
+				break;
 			case KEY_DOWN:
 				moveCur(input);
-				  break;
+				break;
 			case KEY_LEFT:
 				moveCur(input);
-				  break;
+				break;
 			case KEY_RIGHT:
 				moveCur(input);
-				  break;
+				break;
 			case 'd':
 				input=getch();
 				switch(input){
@@ -186,7 +247,7 @@ void displayLoop(){
 						displaying->deleteItem(cury+y);
 						break;
 				}
-				present=displayTable(x,y);
+				displayTable(x,y);
 				break;
 			case 'n':
 				input=getch();
@@ -198,14 +259,24 @@ void displayLoop(){
 						displaying->insertItem(cury+y,new item,emptyData);
 						break;
 				}
-				present=displayTable(x,y);
+				displayTable(x,y);
+				break;
+			case 'e':
+				char s[100];
+				nocbreak();
+				echo();
+				mvwaddstr(tableWindow,1+curx,1+(1+cury)*MAX_DATA_LENGTH,"          ");
+				mvwscanw(tableWindow,1+curx,1+(1+cury)*MAX_DATA_LENGTH,"%s",&s);
+				readString((*(*displaying)[curx+x-1])[cury+y],(char *)s);
+				cbreak();
+				noecho();
+				displayTable(x,y);
 				break;
 			case ':':
-
-				  break;
-			case 'q':
-				endwin();
+				if(commandLine()==-1){
+					endwin();
 				return;
+				}
 				break;
 		}
 	}

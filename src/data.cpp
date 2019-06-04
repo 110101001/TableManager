@@ -71,7 +71,7 @@ bool data::operator<(const class data &rhs){
 		}
 	}
 	else{
-		return strcmp(rhs.str,str);
+		return strcmp(rhs.str,str)>0;
 	}
 	return false;//Shouldn't go here
 }
@@ -108,7 +108,16 @@ char *data::Str(){
 	temp=new char[MAX_DATA_LENGTH];
 	if(isNum==false){
 		if(str!=0){
-			strncpy(temp,str,MAX_DATA_LENGTH);
+			if(strLen>MAX_DATA_LENGTH){
+				strncpy(temp,str,MAX_DATA_LENGTH-3);
+				temp[MAX_DATA_LENGTH-3]='.';
+				temp[MAX_DATA_LENGTH-2]='.';
+				temp[MAX_DATA_LENGTH-1]='.';
+				temp[MAX_DATA_LENGTH]=0;
+			}
+			else{
+				strncpy(temp,str,MAX_DATA_LENGTH);
+			}
 		}
 		else{
 			temp[0]=0;
@@ -166,3 +175,36 @@ class data *readString(char *s){
 	}
 	return temp;
 }
+
+void readString(data *pt,char *s){
+	int i;
+	bool Num=true;
+	bool point=false;
+	for(i=0;s[i]!=0;i++){
+		if((s[i]<'0'||s[i]>'9')&&s[i]!='.'){
+			Num=false;
+		}
+		if(s[i]=='.'){
+			point=true;
+		}
+	}
+	if(Num==true){
+		if(point==false){
+			int intVal;
+			sscanf(s,"%d",&intVal);
+			pt->editData(intVal);
+		}
+		else{
+			double floatVal;
+			sscanf(s,"%lf",&floatVal);
+			pt->editData(floatVal);
+		}
+	}
+	else{
+		char *newStr=new char[i];
+		strcpy(newStr,s);
+		pt->editData(newStr,i);
+	}
+	return;
+}
+
