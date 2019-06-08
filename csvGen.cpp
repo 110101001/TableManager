@@ -4,17 +4,25 @@
 using namespace std;
 
 int main(){
-	cout<<"name,height,weight,grade,sex,age"<<endl;
-	for(int i=0;i<1000;i++){
+	cout<<"id,name,height,weight,grade,sex,age"<<endl;
+	for(int i=0;i<100000;i++){
+		cout<<i+1<<",";
+		int len=4+rand()%6;
+		int commaLen=2+rand()%2;
 		cout<<"\"";
-		for(int j=0;j<4;j++){
+		for(int j=0;j<commaLen;j++){
 			int num=rand()%26;
 			char output='a';
 			output+=(char)num;
 			cout<<output;
 		}
 		cout<<",";
-		cout<<i+1;
+		for(int j=commaLen+1;j<len;j++){
+			int num=rand()%26;
+			char output='a';
+			output+=(char)num;
+			cout<<output;
+		}
 		cout<<"\",";
 
 		int height=150+rand()%50;

@@ -15,6 +15,7 @@ WINDOW *tableWindow;
 WINDOW *commandWindow;
 WINDOW *statusWindow;
 table *displaying;
+extern table **tables;
 
 WINDOW *newBoxWin(int x,int y,int sx,int sy){
 	WINDOW *temp;
@@ -26,7 +27,6 @@ WINDOW *newBoxWin(int x,int y,int sx,int sy){
 
 void initDisplay(){
 	initscr();
-	start_color();
 	refresh();
 	keypad(stdscr, TRUE);
 	tableWindow=newBoxWin(LINES-3,COLS-STATUS_WIDTH,0,0);
@@ -36,6 +36,7 @@ void initDisplay(){
 	statusWindow=newBoxWin(LINES-3,STATUS_WIDTH,0,COLS-STATUS_WIDTH);	
 	cbreak();
 	noecho();
+	
 }
 
 line *displayTable(int x,int y){
@@ -83,13 +84,18 @@ line *displayTable(int x,int y){
 
 void displayStatus(){
 	char displayStr[STATUS_WIDTH];
-	mvwaddstr(statusWindow,1,1,"Statistical Data");	
-	sprintf(displayStr,"COLS:%d",displaying->tableSize.col);
-	mvwaddstr(statusWindow,2,1,displayStr);	
-	sprintf(displayStr,"LINES:%d",displaying->tableSize.row);
-	mvwaddstr(statusWindow,3,1,displayStr);	
-	sprintf(displayStr,"TotalDataNum:%d",displaying->tableSize.col*displaying->tableSize.row);
-	mvwaddstr(statusWindow,4,1,displayStr);	
+	werase(statusWindow);
+	box(statusWindow,0,0);	
+	for(int i=0;i<10;i++){
+		if(tables[i]!=0){
+			mvwaddstr(statusWindow,1+2*i,1,tables[i]->fileName);	
+			sprintf(displayStr,"COLS:%d, LINES:%d",tables[i]->tableSize.col,tables[i]->tableSize.row);
+			mvwaddstr(statusWindow,2+2*i,1,displayStr);	
+		}
+		else{
+			mvwaddstr(statusWindow,1+2*i,1,"Empty Slot");	
+		}
+	}
 	wrefresh(statusWindow);
 	return;	
 }
@@ -154,6 +160,16 @@ void Err(){
 			wrefresh(commandWindow);
 }
 
+int insertTable(table *newTable){
+	for(int i=0;i<10;i++){
+		if(tables[i]==0){
+			tables[i]=newTable;
+			return i;
+		}
+	}
+	return -1;
+}
+
 int commandLine(){
 	char input[100];
 	char *emptyLine=new char[COLS-1];
@@ -202,6 +218,36 @@ int commandLine(){
 			Err();
 		}
 	}
+	else if(0==strcmp(input,"select")){
+		int x,y,h,w;
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Select start x,y and height and width:");
+		wscanw(commandWindow,"%d %d %d %d",&x,&y,&h,&w);
+		table *newTable=displaying->selectPart(x-1,y-1,h,w);
+		int pos=insertTable(newTable);
+		displaying=tables[pos];
+		x=0;y=0;curx=0;cury=0;
+		displayTable(x,y);	
+		displayStatus();
+	}
+	else if(0==strcmp(input,"replace")){
+		int lb=1,ub=1,pos=0;
+		char inputStr[100];
+		data *source;
+		data *to;
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Match data:");
+		wscanw(commandWindow,"%s",inputStr);
+		source=readString(inputStr);
+		mvwaddstr(commandWindow,1,1,"Replace with:");
+		wscanw(commandWindow,"%s",inputStr);
+		to=readString(inputStr);
+		mvwaddstr(commandWindow,1,1,"Select start upperBound, lowerBound and item:");
+		wscanw(commandWindow,"%d %d %d",&lb,&ub,&pos);
+		displaying->replaceData(*source,*to,pos-1,lb-1,ub-1);
+		displayTable(x,y);	
+		displayStatus();
+	}
 	else if(0==strcmp(input,"update")){
 		displaying->updateIndex();
 	}
@@ -215,8 +261,7 @@ void displayLoop(){
 	data emptyData;
 	x=0,y=0;
 	curx=0,cury=0;
-	table test("test.csv");
-	displaying=&test;
+	displaying=tables[0];
 	displayTable(x,y);
 	displayStatus();
 
@@ -267,7 +312,15 @@ void displayLoop(){
 				echo();
 				mvwaddstr(tableWindow,1+curx,1+(1+cury)*MAX_DATA_LENGTH,"          ");
 				mvwscanw(tableWindow,1+curx,1+(1+cury)*MAX_DATA_LENGTH,"%s",&s);
-				readString((*(*displaying)[curx+x-1])[cury+y],(char *)s);
+				if(curx!=0){
+					readString((*(*displaying)[curx+x-1])[cury+y],(char *)s);
+				}
+				else{
+					displaying->items[cury+y]->strLen=strlen(s);
+					delete[] displaying->items[cury+y]->str;
+					displaying->items[cury+y]->str=new char[displaying->items[cury+y]->strLen];
+					strcpy(displaying->items[cury+y]->str,s);
+				}
 				cbreak();
 				noecho();
 				displayTable(x,y);

@@ -5,6 +5,6 @@
 
 #define STATUS_WIDTH 30
 
-#define INDEX_INTERVAL 10
+#define INDEX_INTERVAL 100
 
 #endif

@@ -4,7 +4,6 @@
 #include <cmath>
 #include "settings.h"
 
-
 table::table(char *_fileName){
 	FILE *file;
 	int x=0,y=0;
@@ -260,10 +259,6 @@ void table::updateIndex(){
 	return;
 }
 
-/*
-int table::saveTable();//Save the table to it's original file, return 0 if success
-int table::saveTable(char *fileName);//Save the table to certain file,
-*/
 int table::insertItem(int position,class item *newItem,data repeat){
 	if(position>tableSize.col||position<0){
 		return -1;
@@ -471,8 +466,16 @@ void table::quickSort(line *begin,line *end,int position,bool assending){
 	}
 	while(l!=r){
 		line *tempPt;
-		while(l!=r&&!(assending^(*((*l)[position])<(*(*r)[position])))){
-			r=r->prev;
+		if(!assending){
+			while(l!=r&&!(*((*l)[position])<(*(*r)[position]))){
+				r=r->prev;
+			}
+		}
+		else{
+			while(l!=r&&!(*((*r)[position])<(*(*l)[position]))){
+				r=r->prev;
+			}
+
 		}
 		if(l==r){
 			break;
@@ -486,8 +489,15 @@ void table::quickSort(line *begin,line *end,int position,bool assending){
 			end=r;
 		}
 		l=l->next;
-		while(l!=r&&!(assending^(*((*l)[position])<*((*r)[position])))){
-			l=l->next;
+		if(!assending){
+			while(l!=r&&!(*((*l)[position])<*((*r)[position]))){
+				l=l->next;
+			}
+		}
+		else{
+			while(l!=r&&!(*((*r)[position])<*((*l)[position]))){
+				l=l->next;
+			}
 		}
 		if(l==r){
 			break;
@@ -517,11 +527,97 @@ int table::sortByItem(int position,bool assending){//QuickSort
 	return 0;
 }
 
+table *table::selectPart(int x,int y,int h,int w){
+	if(x<0){
+		h+=x;
+		x=0;
+	}
+	if(y<0){
+		w+=y;
+		y=0;
+	}
+	if(h+x>tableSize.row){
+		h=tableSize.row-x;
+	}
+	if(w+y>tableSize.col){
+		w=tableSize.col-y;
+	}
+	if(h==0||w==0){
+		return 0;
+	}
+	table *newTable=new table;
+	newTable->tableSize={h,w};
+	newTable->items=new item*[w];
+	newTable->fileName=new char[strlen(fileName)];
+	strcpy(newTable->fileName,fileName);
+	for(int j=y;j<y+w;j++){
+		item *temp=new item;
+		temp->str=new char[items[j]->strLen];
+		strcpy(temp->str,items[j]->str);
+		temp->strLen=items[j]->strLen;
+		newTable->items[j-y]=temp;
+	}
+
+	line *originalPresent=locateLine(x);
+	line *newPresent;
+	data **temp=new data*[w];
+	for(int j=y;j<y+w;j++){
+		temp[j-y]=new data(*((*originalPresent)[j]));
+	}
+	newTable->lineHead=new line(temp,w);
+	newPresent=newTable->lineHead;
+	originalPresent=originalPresent->next;
+	for(int i=1;i<h;i++){
+		temp=new data*[w];
+		for(int j=y;j<y+w;j++){
+			temp[j-y]=new data(*((*originalPresent)[j]));
+		}
+		newPresent->next=new line(temp,w);
+		newPresent->next->prev=newPresent;
+		newPresent=newPresent->next;
+		originalPresent=originalPresent->next;
+	}
+	newTable->updateIndex();
+	return newTable;
+}
+
 /*
+int table::saveTable();//Save the table to it's original file, return 0 if success
+int table::saveTable(char *fileName);//Save the table to certain file,
 int table::searchItem(char *name,int strLen);//search item by name, return position
 class table *table::searchData(int itemPosition,class data,int lowerRange=0,int upperRange=0);//search by Data, return a table including all search results
-class table *table::replaceData(int itemPosition,class data,class newData,int lowerRange=0,int upperRange=0);//replace data, return a table including all search results
 */
+
+void table::replaceData(class data source,class data newData,int itemPosition,int lowerRange,int upperRange){
+	if(upperRange==0&&lowerRange==0){
+		upperRange=tableSize.row-1;
+	}
+	if(lowerRange>=tableSize.row||upperRange<0||lowerRange>=upperRange||itemPosition>=tableSize.col){
+		return;
+	}
+	if(lowerRange<0){
+		lowerRange=0;
+	}
+	if(upperRange>=tableSize.row){
+		upperRange=tableSize.row-1;
+	}
+	line *present=locateLine(lowerRange);
+	if(itemPosition<0){
+		for(int i=lowerRange;i<upperRange&&present!=0;i++){
+			for(int j=0;j<tableSize.col;j++){
+				(*present)[j]->replace(source,&newData);
+			}
+			present=present->next;
+		}
+	}
+	else{
+		for(int i=lowerRange;i<upperRange&&present!=0;i++){
+			(*present)[itemPosition]->replace(source,&newData);
+			present=present->next;
+		}
+	}
+}
+
 class line *table::operator[](int row){
 	return locateLine(row);
 }

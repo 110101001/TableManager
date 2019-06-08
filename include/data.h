@@ -17,6 +17,7 @@ class data{
 
 		~data();
 
+		void operator=(const class data &rhs);
 		bool operator<(const class data &rhs);
 
 		void editData(int val);
@@ -26,6 +27,9 @@ class data{
 		void editData(char *_string,int strlen);
 
 		char *Str();
+
+		int replace(data &source,data *to=0);//replace data with "to" if data.str=source.str, return 0 if match.
+		int replace(data &source,data *to,int *fail);
 
 		bool isEmpty();
 
@@ -48,6 +52,7 @@ class data{
 
 class data *readString(char *s);
 void readString(data *pt,char *s);
+int* failCalc(char *pat);
 
 struct indexPointer;
 typedef struct indexPointer indexPointer;
@@ -142,7 +147,6 @@ class table{
 		class line *lineHead;
 		indexPointer **index;
 		int indexDepth;
-		char *fileName;
 
 		void swapLine(line *a,line *b);
 		void quickSort(line *begin,line *end,int position,bool assending);
@@ -152,8 +156,9 @@ class table{
 			int col;
 		} tableSize;
 		class item **items;
+		char *fileName;
 
-		table():tableSize({0,0}),items(0),lineHead(0){}//construct a empty table
+		table():tableSize({0,0}),items(0),lineHead(0),index(0){}//construct a empty table
 		table(char *_fileName);//construct a table by a file
 		
 		line *locateLine(int targetRow);//locate a line by its row, use indextable if it has
@@ -172,9 +177,10 @@ class table{
 
 		int sortByItem(int position,bool asending);//sort lines of data
 
+		class table *selectPart(int x,int y,int h,int w);//select part of the table and generate a new table.
 		int searchItem(char *name,int strLen);//search item by name, return position
 		class table *searchData(int itemPosition,class data,int lowerRange=0,int upperRange=0);//search by Data, return a table including all search results
-		class table *replaceData(int itemPosition,class data,class newData,int lowerRange=0,int upperRange=0);//replace data, return a table including all search results
+		void replaceData(class data,class data newData,int itemPosition=-1,int lowerRange=0,int upperRange=0);//replace data, return a table including all search results
 
 		class line *operator[](int row);
 };
