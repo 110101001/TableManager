@@ -33,8 +33,8 @@ class data{
 
 		bool isEmpty();
 
-	protected:
 		bool isNum;//Is it is a number?
+	protected:
 		union{
 			struct {//It's a number!
 				bool isInt;//Is it a interger?

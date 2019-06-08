@@ -239,11 +239,13 @@ int commandLine(){
 		mvwaddstr(commandWindow,1,1,"Match data:");
 		wscanw(commandWindow,"%s",inputStr);
 		source=readString(inputStr);
+		mvwaddstr(commandWindow,1,1,emptyLine);	
 		mvwaddstr(commandWindow,1,1,"Replace with:");
 		wscanw(commandWindow,"%s",inputStr);
 		to=readString(inputStr);
-		mvwaddstr(commandWindow,1,1,"Select start upperBound, lowerBound and item:");
-		wscanw(commandWindow,"%d %d %d",&lb,&ub,&pos);
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Select item and upperBound, lowerBound:");
+		wscanw(commandWindow,"%d %d %d",&pos,&lb,&ub);
 		displaying->replaceData(*source,*to,pos-1,lb-1,ub-1);
 		displayTable(x,y);	
 		displayStatus();

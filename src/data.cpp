@@ -56,6 +56,7 @@ bool data::operator<(const class data &rhs){
 
 void data::operator=(const class data &rhs){
 	if(rhs.isNum==false){
+		isNum=false;
 		if(rhs.str!=0){
 			str=new char[rhs.strLen];
 			strcpy(str,rhs.str);
@@ -136,6 +137,41 @@ char *data::Str(){
 	return temp;
 }
 
+int* failCalc(char *pat){
+	int *fail=new int[100];
+	fail[0]=-1;
+	for(int i=1;pat[i]!=0;i++){
+		if(pat[i-1]==pat[fail[i-1]]){
+			fail[i]=fail[i-1]+1;
+		}
+		else{
+			fail[i]=0;
+		}
+	}	
+	return fail;
+}
+
+int stringMatch(int *fail,char *pat,char *text){
+	int patLen=strlen(pat);
+	int textLen=strlen(text);
+	for(int i=0;i<=textLen-patLen;i++){
+		int j=0;
+		while(j>=0&&i<textLen){
+			if(text[i]==pat[j]){
+				i++;
+				j++;
+				if(j==patLen){
+					return i-patLen;
+				}
+			}
+			else{
+				j=fail[j];
+			}
+		}
+	}
+	return -1;
+}
+
 int data::replace(data &source,data *to){
 	if(source.isNum!=true){
 		return -1;
@@ -177,31 +213,32 @@ int data::replace(data &source,data *to){
 }
 
 int data::replace(data &source,data *to,int *fail){
-	if(source.isNum==true){
+	if(source.isNum==true||isNum==true){
 		return -1;
 	}
 	else{
 		int pos;
-		if(pos=stringMatch(fail,source.str,str)!=-1){
+		if((pos=stringMatch(fail,source.str,str))!=-1){
 			if(to!=0){
 				if(source.strLen==to->strLen){
-					for(int i=pos;i<pos+source->strLen;i++){
+					for(int i=pos;i<pos+source.strLen;i++){
 						str[i]=to->str[i-pos];
 					}
 				}
 				else{
-					char *temp=new char[strLen+to->strLen-source->strLen];
+					char *temp=new char[strLen+to->strLen-source.strLen];
 					for(int i=0;i<pos;i++){
 						temp[i]=str[i];
 					}
 					for(int i=pos;i<pos+to->strLen;i++){
 						temp[i]=to->str[i-pos];
 					}
-					for(int i=pos+to->strLen;i++){
-						temp[i]=str[i-to->strLen+source.strLen];
+					for(int i=pos+to->strLen;i<strLen+to->strLen-source.strLen;i++){
+						temp[i]=str[i+to->strLen-source.strLen];
 					}
 					delete[] str;
 					str=temp;
+					strLen=strLen+to->strLen-source.strLen;
 				}
 			}
 			return 0;
@@ -283,38 +320,4 @@ void readString(data *pt,char *s){
 		pt->editData(newStr,i);
 	}
 	return;
-}
-
-int* failCalc(char *pat){
-	int *fail=new int[100];
-	fail[0]=-1;
-	for(int i=1;pat[i]!=0;i++){
-		if(pat[i-1]==pat[fail[i-1]]){
-			fail[i]=fail[i-1]+1;
-		}
-		else{
-			fail[i]=0;
-		}
-	}	
-	return fail;
-}
-
-int stringMatch(int *fail,char *pat,char *text){
-	int patLen=strlen(pat);
-	int textLen=strlen(text);
-	for(int i=0;i<textLen-patLen;i++){
-		int j=0;
-		while(j>=0&&i<textLen){
-			if(j==patLen){
-				return i-patLen;
-			}
-			if(text[i]==pat[j]){
-				i++;
-				j++;
-			}
-			else{
-				j=fail[j];
-			}
-		}
-	}
 }
