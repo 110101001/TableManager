@@ -39,7 +39,6 @@ bool data::operator<(const class data &rhs){
 			return rhs.intValue>intValue;
 		}
 		else{
-			float a,b;
 			if(isInt){
 				return rhs.floatValue>intValue;
 			}
@@ -49,7 +48,82 @@ bool data::operator<(const class data &rhs){
 		}
 	}
 	else{
+		if(str==0){
+			return true;
+		}
+		else if(rhs.str==0){
+			return false;
+		}
 		return strcmp(rhs.str,str)>0;
+	}
+	return false;//Shouldn't go here
+}
+
+bool data::operator==(const class data &rhs){
+	if(rhs.isNum!=isNum){
+		return false;
+	}
+	else if(isNum&&rhs.isNum){
+		if(!(isInt||rhs.isInt)){
+			return rhs.floatValue==floatValue;
+		}
+		else if(isInt&&rhs.isInt){
+			return rhs.intValue==intValue;
+		}
+		else{
+			if(isInt){
+				return rhs.floatValue==intValue;
+			}
+			else{
+				return rhs.intValue==floatValue;
+			}
+		}
+	}
+	else{
+		if(str==0||rhs.str==0){
+			if(rhs.str==0&&str==0){
+				return true;
+			}
+			return false;
+		}
+		return strcmp(rhs.str,str)==0;
+	}
+	return false;//Shouldn't go here
+}
+
+bool data::operator>(const class data &rhs){
+	if(rhs.isNum!=isNum){
+		if(rhs.isNum){
+			return false;
+		}
+		else{
+			return true;
+		}
+	}
+	else if(isNum&&rhs.isNum){
+		if(!(isInt||rhs.isInt)){
+			return rhs.floatValue<floatValue;
+		}
+		else if(isInt&&rhs.isInt){
+			return rhs.intValue<intValue;
+		}
+		else{
+			if(isInt){
+				return rhs.floatValue<intValue;
+			}
+			else{
+				return rhs.intValue<floatValue;
+			}
+		}
+	}
+	else{
+		if(str==0){
+			return false;
+		}
+		else if(rhs.str==0){
+			return true;
+		}
+		return strcmp(rhs.str,str)<0;
 	}
 	return false;//Shouldn't go here
 }
@@ -173,6 +247,9 @@ int stringMatch(int *fail,char *pat,char *text){
 }
 
 int data::replace(data &source,data *to){
+	if(isNum==false&&str==0){
+		return -1;
+	}
 	if(source.isNum!=true){
 		return -1;
 	}
@@ -213,6 +290,9 @@ int data::replace(data &source,data *to){
 }
 
 int data::replace(data &source,data *to,int *fail){
+	if(isNum==false&&str==0){
+		return -1;
+	}
 	if(source.isNum==true||isNum==true){
 		return -1;
 	}
@@ -220,25 +300,35 @@ int data::replace(data &source,data *to,int *fail){
 		int pos;
 		if((pos=stringMatch(fail,source.str,str))!=-1){
 			if(to!=0){
-				if(source.strLen==to->strLen){
-					for(int i=pos;i<pos+source.strLen;i++){
-						str[i]=to->str[i-pos];
+				while(pos!=-1){
+					int increase=0;
+					if(source.strLen==to->strLen){
+						for(int i=pos;i<pos+source.strLen;i++){
+							str[i]=to->str[i-pos];
+						}
 					}
-				}
-				else{
-					char *temp=new char[strLen+to->strLen-source.strLen];
-					for(int i=0;i<pos;i++){
-						temp[i]=str[i];
+					else{
+						char *temp=new char[strLen+to->strLen-source.strLen];
+						for(int i=0;i<pos;i++){
+							temp[i]=str[i];
+						}
+						for(int i=pos;i<pos+to->strLen-1;i++){
+							temp[i]=to->str[i-pos];
+						}
+						for(int i=pos+to->strLen-1;i<strLen+to->strLen-source.strLen;i++){
+							temp[i]=str[i-to->strLen+source.strLen];
+						}
+						delete[] str;
+						str=temp;
+						strLen=strLen+to->strLen-source.strLen;
 					}
-					for(int i=pos;i<pos+to->strLen;i++){
-						temp[i]=to->str[i-pos];
+					increase=stringMatch(fail,source.str,str+pos+to->strLen);
+					if(increase==-1){
+						break;
 					}
-					for(int i=pos+to->strLen;i<strLen+to->strLen-source.strLen;i++){
-						temp[i]=str[i+to->strLen-source.strLen];
+					else{
+						pos+=increase+to->strLen;
 					}
-					delete[] str;
-					str=temp;
-					strLen=strLen+to->strLen-source.strLen;
 				}
 			}
 			return 0;
@@ -283,9 +373,9 @@ class data *readString(char *s){
 		}
 	}
 	else{
-		char *newStr=new char[i];
+		char *newStr=new char[i+1];
 		strcpy(newStr,s);
-		temp=new class data(newStr,i);
+		temp=new class data(newStr,i+1);
 	}
 	return temp;
 }
@@ -315,9 +405,33 @@ void readString(data *pt,char *s){
 		}
 	}
 	else{
-		char *newStr=new char[i];
+		char *newStr=new char[i+1];
 		strcpy(newStr,s);
-		pt->editData(newStr,i);
+		pt->editData(newStr,i+1);
 	}
 	return;
+}
+
+unsigned int bkdrHash(char *s){
+	if(s==0){
+		return 0;
+	}
+	unsigned int res=0;
+	unsigned int factor=1;
+	int seed=3;
+	int pos=0;
+	while(s[pos]!=0){
+		res+=s[pos++]*factor;
+		factor*=seed;
+	}
+	return res;
+}
+
+unsigned int data::hash(){
+	if(isNum==false){
+		return bkdrHash(str);
+	}
+	else{
+		return 0;
+	}
 }

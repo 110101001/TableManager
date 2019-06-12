@@ -259,6 +259,29 @@ void table::updateIndex(){
 	return;
 }
 
+int table::searchItem(char *field){
+	for(int i=0;i<tableSize.col;i++){
+		if(items[i]->str!=0){
+			if(strcmp(field,items[i]->str)==0){
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+
+int table::editItem(int position, char *field){
+	int repeat;
+	if((repeat=searchItem(field))!=-1&&repeat!=position){
+		return -1;
+	}
+	items[position]->strLen=strlen(field);
+	delete[] items[position]->str;
+	items[position]->str=new char[items[position]->strLen];
+	strcpy(items[position]->str,field);
+	return 0;
+}
+
 int table::insertItem(int position,class item *newItem,data repeat){
 	if(position>tableSize.col||position<0){
 		return -1;
@@ -292,7 +315,9 @@ int table::insertData(int position, class line* newLine){
 	else if(position==0){
 		newLine->next=lineHead;
 		newLine->prev=0;
-		lineHead->prev=newLine;
+		if(lineHead!=0){
+			lineHead->prev=newLine;
+		}
 		lineHead=newLine;
 		if(index!=0){
 			lineHead->next->parents=index[0]->next;
@@ -307,7 +332,8 @@ int table::insertData(int position, class line* newLine){
 		return 0;
 	}
 	else{
-		return insertData(locateLine(position-1), newLine);
+		int res=insertData(locateLine(position-1), newLine);
+		return res;
 	}
 }
 
@@ -409,6 +435,7 @@ void SWAP(T *&x,T *&y){
 }
 
 void table::swapLine(line *a,line *b){
+	bool changedA=false;
 	if(a->next!=b){
 		if(a->prev!=0){
 			a->prev->next=b;
@@ -441,10 +468,11 @@ void table::swapLine(line *a,line *b){
 	if(a->parents!=0){
 		if(a->parents->linePt==b){
 			a->parents->linePt=a;
+			changedA=true;
 		}
 	}
 	if(b->parents!=0){
-		if(b->parents->linePt==a){
+		if(b->parents->linePt==a&&(changedA==false||b->parents!=a->parents)){
 			b->parents->linePt=b;
 		}
 	}
@@ -503,7 +531,7 @@ void table::quickSort(line *begin,line *end,int position,bool assending){
 			break;
 		}
 		swapLine(l,r);
-		SWAP(l,r);
+		SWAP<line>(l,r);
 		if(begin==r){
 			begin=l;
 		}
@@ -542,11 +570,11 @@ table *table::selectPart(int x,int y,int h,int w){
 	if(w+y>tableSize.col){
 		w=tableSize.col-y;
 	}
-	if(h==0||w==0){
+	if(h<=0||w<=0){
 		return 0;
 	}
 	table *newTable=new table;
-	newTable->tableSize={h,w};
+	newTable->tableSize={0,w};
 	newTable->items=new item*[w];
 	newTable->fileName=new char[strlen(fileName)];
 	strcpy(newTable->fileName,fileName);
@@ -559,22 +587,21 @@ table *table::selectPart(int x,int y,int h,int w){
 	}
 
 	line *originalPresent=locateLine(x);
-	line *newPresent;
 	data **temp=new data*[w];
-	for(int j=y;j<y+w;j++){
-		temp[j-y]=new data(*((*originalPresent)[j]));
-	}
-	newTable->lineHead=new line(temp,w);
-	newPresent=newTable->lineHead;
-	originalPresent=originalPresent->next;
-	for(int i=1;i<h;i++){
+	line *position;
+	for(int i=0;i<h;i++){
 		temp=new data*[w];
 		for(int j=y;j<y+w;j++){
 			temp[j-y]=new data(*((*originalPresent)[j]));
 		}
-		newPresent->next=new line(temp,w);
-		newPresent->next->prev=newPresent;
-		newPresent=newPresent->next;
+		if(newTable->tableSize.row==0){
+			newTable->insertData(i,new line(temp,1));
+			position=newTable->lineHead;
+		}
+		else{
+			newTable->insertData(position,new line(temp,1));
+			position=position->next;
+		}
 		originalPresent=originalPresent->next;
 	}
 	newTable->updateIndex();
@@ -584,14 +611,14 @@ table *table::selectPart(int x,int y,int h,int w){
 /*
 int table::saveTable();//Save the table to it's original file, return 0 if success
 int table::saveTable(char *fileName);//Save the table to certain file,
-int table::searchItem(char *name,int strLen);//search item by name, return position
 */
-class table *table::searchData(int itemPosition,class data,int lowerRange=0,int upperRange=0){
+
+class table *table::searchDataString(int itemPosition,class data source,int lowerRange,int upperRange){
 	if(upperRange==0&&lowerRange==0){
 		upperRange=tableSize.row-1;
 	}
 	if(lowerRange>=tableSize.row||upperRange<0||lowerRange>=upperRange||itemPosition>=tableSize.col){
-		return;
+		return 0;
 	}
 	if(lowerRange<0){
 		lowerRange=0;
@@ -600,36 +627,187 @@ class table *table::searchData(int itemPosition,class data,int lowerRange=0,int 
 		upperRange=tableSize.row-1;
 	}
 	table *newTable=new table;
-	newTable->tableSize={0,tableSize.col};
-	newTable->items=new item*[w];
+	newTable->tableSize={0,1};
+	newTable->items=new item*[1];
+	newTable->items[0]=new item;
+	newTable->items[0]->str=new char[8];
 	newTable->fileName=new char[strlen(fileName)];
 	strcpy(newTable->fileName,fileName);
-	for(int j=y;j<y+w;j++){
-		item *temp=new item;
-		temp->str=new char[items[j]->strLen];
-		strcpy(temp->str,items[j]->str);
-		temp->strLen=items[j]->strLen;
-		newTable->items[j-y]=temp;
-	}
+	strcpy(newTable->items[0]->str,"Matched");
 
-	line *originalPresent=locateLine(x);
-	line *newPresent;
-	data **temp=new data*[w];
-	for(int j=y;j<y+w;j++){
-		temp[j-y]=new data(*((*originalPresent)[j]));
-	}
-	newTable->lineHead=new line(temp,w);
-	newPresent=newTable->lineHead;
-	originalPresent=originalPresent->next;
-	for(int i=1;i<h;i++){
-		temp=new data*[w];
-		for(int j=y;j<y+w;j++){
-			temp[j-y]=new data(*((*originalPresent)[j]));
+	line *originalPresent=locateLine(lowerRange);
+	line *position;
+	if(source.isNum==false){
+		int *failArray;
+		failArray=failCalc(source.Str());
+		if(itemPosition<0){
+			for(int i=lowerRange;i<=upperRange;i++){
+				for(int j=0;j<tableSize.col;j++){
+					if((*originalPresent)[j]->replace(source,0,failArray)!=-1){
+						data **temp=new data*[1];
+						temp[0]=new data(*(*originalPresent)[j]);
+						if(newTable->tableSize.row==0){
+							newTable->insertData(newTable->tableSize.row,new line(temp,1));
+							position=newTable->lineHead;
+						}
+						else{
+							newTable->insertData(position,new line(temp,1));
+							position=position->next;
+						}
+					}
+				}
+				originalPresent=originalPresent->next;
+			}
 		}
-		newPresent->next=new line(temp,w);
-		newPresent->next->prev=newPresent;
-		newPresent=newPresent->next;
-		originalPresent=originalPresent->next;
+		else{
+			for(int i=lowerRange;i<=upperRange;i++){
+				if((*originalPresent)[itemPosition]->replace(source,0,failArray)!=-1){
+					data **temp=new data*[1];
+					temp[0]=new data(*(*originalPresent)[itemPosition]);
+					if(newTable->tableSize.row==0){
+						newTable->insertData(newTable->tableSize.row,new line(temp,1));
+						position=newTable->lineHead;
+					}
+					else{
+						newTable->insertData(position,new line(temp,1));
+						position=position->next;
+					}
+				}
+				originalPresent=originalPresent->next;
+			}
+		}
+	}
+	newTable->updateIndex();
+	return newTable;
+}
+
+class table *table::searchDataNum(int itemPosition,class data source,int relation,int lowerRange,int upperRange){
+	if(upperRange==0&&lowerRange==0){
+		upperRange=tableSize.row-1;
+	}
+	if(lowerRange>=tableSize.row||upperRange<0||lowerRange>=upperRange||itemPosition>=tableSize.col){
+		return 0;
+	}
+	if(lowerRange<0){
+		lowerRange=0;
+	}
+	if(upperRange>=tableSize.row){
+		upperRange=tableSize.row-1;
+	}
+	table *newTable=new table;
+	newTable->tableSize={0,1};
+	newTable->items=new item*[1];
+	newTable->items[0]=new item;
+	newTable->items[0]->str=new char[8];
+	newTable->fileName=new char[strlen(fileName)];
+	strcpy(newTable->fileName,fileName);
+	strcpy(newTable->items[0]->str,"Matched");
+
+	line *originalPresent=locateLine(lowerRange);
+	line *position;
+	if(source.isNum==true){
+		int *failArray;
+		failArray=failCalc(source.Str());
+		if(itemPosition<0){
+			for(int i=lowerRange;i<=upperRange;i++){
+				for(int j=0;j<tableSize.col;j++){
+					switch(relation){
+						case -1:
+							if((*(*originalPresent)[j])<source&&(*originalPresent)[j]->isNum==true){
+								data **temp=new data*[1];
+								temp[0]=new data(*(*originalPresent)[j]);
+								if(newTable->tableSize.row==0){
+									newTable->insertData(newTable->tableSize.row,new line(temp,1));
+									position=newTable->lineHead;
+								}
+								else{
+									newTable->insertData(position,new line(temp,1));
+									position=position->next;
+								}
+							}
+							break;
+						case 1:
+							if((*(*originalPresent)[j])>source&&(*originalPresent)[j]->isNum==true){
+								data **temp=new data*[1];
+								temp[0]=new data(*(*originalPresent)[j]);
+								if(newTable->tableSize.row==0){
+									newTable->insertData(newTable->tableSize.row,new line(temp,1));
+									position=newTable->lineHead;
+								}
+								else{
+									newTable->insertData(position,new line(temp,1));
+									position=position->next;
+								}
+							}
+							break;
+						case 0:
+							if((*(*originalPresent)[j])==source&&(*originalPresent)[j]->isNum==true){
+								data **temp=new data*[1];
+								temp[0]=new data(*(*originalPresent)[j]);
+								if(newTable->tableSize.row==0){
+									newTable->insertData(newTable->tableSize.row,new line(temp,1));
+									position=newTable->lineHead;
+								}
+								else{
+									newTable->insertData(position,new line(temp,1));
+									position=position->next;
+								}
+							}
+							break;
+					}
+				}
+				originalPresent=originalPresent->next;
+			}
+		}
+		else{
+			for(int i=lowerRange;i<=upperRange;i++){
+				switch(relation){
+					case -1:
+						if((*(*originalPresent)[itemPosition])<source&&(*originalPresent)[itemPosition]->isNum==true){
+							data **temp=new data*[1];
+							temp[0]=new data(*(*originalPresent)[itemPosition]);
+							if(newTable->tableSize.row==0){
+								newTable->insertData(newTable->tableSize.row,new line(temp,1));
+								position=newTable->lineHead;
+							}
+							else{
+								newTable->insertData(position,new line(temp,1));
+								position=position->next;
+							}
+						}
+						break;
+					case 1:
+						if((*(*originalPresent)[itemPosition])>source&&(*originalPresent)[itemPosition]->isNum==true){
+							data **temp=new data*[1];
+							temp[0]=new data(*(*originalPresent)[itemPosition]);
+							if(newTable->tableSize.row==0){
+								newTable->insertData(newTable->tableSize.row,new line(temp,1));
+								position=newTable->lineHead;
+							}
+							else{
+								newTable->insertData(position,new line(temp,1));
+								position=position->next;
+							}
+						}
+						break;
+					case 0:
+						if((*(*originalPresent)[itemPosition])==source&&(*originalPresent)[itemPosition]->isNum==true){
+							data **temp=new data*[1];
+							temp[0]=new data(*(*originalPresent)[itemPosition]);
+							if(newTable->tableSize.row==0){
+								newTable->insertData(newTable->tableSize.row,new line(temp,1));
+								position=newTable->lineHead;
+							}
+							else{
+								newTable->insertData(position,new line(temp,1));
+								position=position->next;
+							}
+						}
+						break;
+				}
+				originalPresent=originalPresent->next;
+			}
+		}
 	}
 	newTable->updateIndex();
 	return newTable;
@@ -653,7 +831,7 @@ void table::replaceData(class data source,class data newData,int itemPosition,in
 		int *failArray;
 		failArray=failCalc(source.Str());
 		if(itemPosition<0){
-			for(int i=lowerRange;i<upperRange&&present!=0;i++){
+			for(int i=lowerRange;i<=upperRange&&present!=0;i++){
 				for(int j=0;j<tableSize.col;j++){
 					(*present)[j]->replace(source,&newData,failArray);
 				}
@@ -661,7 +839,7 @@ void table::replaceData(class data source,class data newData,int itemPosition,in
 			}
 		}
 		else{
-			for(int i=lowerRange;i<upperRange&&present!=0;i++){
+			for(int i=lowerRange;i<=upperRange&&present!=0;i++){
 				(*present)[itemPosition]->replace(source,&newData,failArray);
 				present=present->next;
 			}
@@ -684,6 +862,39 @@ void table::replaceData(class data source,class data newData,int itemPosition,in
 			}
 		}
 	}
+}
+
+unsigned int table::hash(){
+	int count[8*sizeof(int)];
+	unsigned int bit[8*sizeof(int)];
+	unsigned int result=0;
+	for(int i=0;i<8*sizeof(int);i++){
+		count[i]=0;
+		bit[i]=1<<i;
+	}
+	line *present=lineHead;
+	while(present!=0){
+		for(int j=0;j<tableSize.col;j++){
+			int temp=(*present)[j]->hash();
+			if(temp!=0){
+				for(int i=0;i<8*sizeof(int);i++){
+					if((temp&bit[i])!=0){
+						count[i]++;
+					}
+					else{
+						count[i]--;
+					}
+				}
+			}
+		}
+		present=present->next;
+	}
+	for(int i=0;i<8*sizeof(int);i++){
+		if(count[i]>0){
+			result+=bit[i];
+		}
+	}
+	return result;
 }
 
 class line *table::operator[](int row){

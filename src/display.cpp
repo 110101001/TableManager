@@ -40,6 +40,9 @@ void initDisplay(){
 }
 
 line *displayTable(int x,int y){
+	static int lastx;
+	static line *lastPos;
+	static table *lastTable;
 	int posx=1;
 	int posy=1;
 	int edgey;
@@ -62,6 +65,22 @@ line *displayTable(int x,int y){
 	}
 	posx++;
 	line *firstLine=(*displaying)[x];
+	if(x==lastx+1&&lastTable==displaying){
+		firstLine=lastPos->next;
+		lastPos=firstLine;
+		lastx=x;
+	}
+	else if(x==lastx-1&&lastTable==displaying){
+		firstLine=lastPos->prev;
+		lastPos=firstLine;
+		lastx=x;
+	}
+	else{
+		firstLine=(*displaying)[x];
+		lastPos=firstLine;
+		lastx=x;
+		lastTable=displaying;
+	}
 	line *present=firstLine;
 	while(posx<tableWindowHeight&&present!=0){
 		for(int i=y;i<edgey;i++){
@@ -204,14 +223,16 @@ int commandLine(){
 		}
 	}
 	else if(0==strcmp(input,"sort")){
-		int position;
+		char field[100];
 		int ascending;
+		int position;
 		mvwaddstr(commandWindow,1,1,emptyLine);	
-		mvwaddstr(commandWindow,1,1,"Select column and ascending:");
-		wscanw(commandWindow,"%d %d",&position,&ascending);
-		if(position<=displaying->tableSize.col&&position>0){
+		mvwaddstr(commandWindow,1,1,"Select item and direction:");
+		wscanw(commandWindow,"%s %d",(char*)field,&ascending);
+		position=displaying->searchItem(field);
+		if(position<displaying->tableSize.col&&position>=0){
 			mvwaddstr(commandWindow,1,1,emptyLine);	
-			displaying->sortByItem(position-1,ascending!=0);
+			displaying->sortByItem(position,ascending!=0);
 			displayTable(x,y);
 		}
 		else{
@@ -224,11 +245,47 @@ int commandLine(){
 		mvwaddstr(commandWindow,1,1,"Select start x,y and height and width:");
 		wscanw(commandWindow,"%d %d %d %d",&x,&y,&h,&w);
 		table *newTable=displaying->selectPart(x-1,y-1,h,w);
-		int pos=insertTable(newTable);
-		displaying=tables[pos];
+		displaying=tables[insertTable(newTable)];
 		x=0;y=0;curx=0;cury=0;
 		displayTable(x,y);	
 		displayStatus();
+	}
+	else if(0==strcmp(input,"open")){
+		int index;
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Select table:");
+		wscanw(commandWindow,"%d",&index);
+		displaying=tables[index-1];
+		x=0;y=0;curx=0;cury=0;
+		displayTable(x,y);	
+		displayStatus();
+	}
+	else if(0==strcmp(input,"compare")){
+		int a,b;
+		unsigned int resa,resb;
+		char output[100];
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Select tables:");
+		wscanw(commandWindow,"%d %d",&a,&b);
+		if(tables[a-1]!=0&&tables[b-1]!=0){
+			int diff=0;
+			resa=tables[a-1]->hash();
+			resb=tables[b-1]->hash();
+			for(int i=0;i<8*sizeof(int);i++){
+				if((resa&0x1)!=(resb&0x1)){
+					diff++;
+				}
+				resa/=2;
+				resb/=2;
+			}
+			sprintf(output,"%d bits are different among 32 bits",diff);
+			mvwaddstr(commandWindow,1,1,emptyLine);	
+			mvwaddstr(commandWindow,1,1,output);
+			wrefresh(commandWindow);
+		}
+		else{
+			Err();
+		}
 	}
 	else if(0==strcmp(input,"replace")){
 		int lb=1,ub=1,pos=0;
@@ -245,10 +302,50 @@ int commandLine(){
 		to=readString(inputStr);
 		mvwaddstr(commandWindow,1,1,emptyLine);	
 		mvwaddstr(commandWindow,1,1,"Select item and upperBound, lowerBound:");
-		wscanw(commandWindow,"%d %d %d",&pos,&lb,&ub);
-		displaying->replaceData(*source,*to,pos-1,lb-1,ub-1);
+		wscanw(commandWindow,"%s %d %d",(char *)inputStr,&lb,&ub);
+		pos=displaying->searchItem(inputStr);
+		displaying->replaceData(*source,*to,pos,lb-1,ub-1);
 		displayTable(x,y);	
 		displayStatus();
+		delete source;
+		delete to;
+	}
+	else if(0==strcmp(input,"search")){
+		int lb=1,ub=1,pos=0,relation;
+		char inputStr[100];
+		char relationSymbol='=';
+		data *source;
+		table *newTable;
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Match data:");
+		wscanw(commandWindow,"%s",inputStr);
+		source=readString(inputStr);
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"Select item,relation,lowerbound and upperbound:");
+		wscanw(commandWindow,"%s %c %d %d",(char *)inputStr,&relationSymbol,&lb,&ub);
+		pos=displaying->searchItem(inputStr);
+		switch(relationSymbol){
+			case '=':
+				relation=0;
+				break;
+			case '>':
+				relation=1;
+				break;
+			case '<':
+				relation=-1;
+				break;
+		}
+		if(source->isNum){
+			newTable=displaying->searchDataNum(pos,*source,relation,lb-1,ub-1);
+		}
+		else{
+			newTable=displaying->searchDataString(pos,*source,lb-1,ub-1);
+		}
+		displaying=tables[insertTable(newTable)];
+		x=0;y=0;curx=0;cury=0;
+		displayTable(x,y);
+		displayStatus();
+		delete source;
 	}
 	else if(0==strcmp(input,"update")){
 		displaying->updateIndex();
@@ -318,10 +415,7 @@ void displayLoop(){
 					readString((*(*displaying)[curx+x-1])[cury+y],(char *)s);
 				}
 				else{
-					displaying->items[cury+y]->strLen=strlen(s);
-					delete[] displaying->items[cury+y]->str;
-					displaying->items[cury+y]->str=new char[displaying->items[cury+y]->strLen];
-					strcpy(displaying->items[cury+y]->str,s);
+					displaying->editItem(cury+y,(char *)s);
 				}
 				cbreak();
 				noecho();

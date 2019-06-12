@@ -17,8 +17,10 @@ class data{
 
 		~data();
 
-		void operator=(const class data &rhs);
 		bool operator<(const class data &rhs);
+		bool operator==(const class data &rhs);
+		bool operator>(const class data &rhs);
+		void operator=(const class data &rhs);
 
 		void editData(int val);
 
@@ -30,6 +32,8 @@ class data{
 
 		int replace(data &source,data *to=0);//replace data with "to" if data.str=source.str, return 0 if match.
 		int replace(data &source,data *to,int *fail);
+
+		unsigned int hash();
 
 		bool isEmpty();
 
@@ -167,6 +171,8 @@ class table{
 		int saveTable();//Save the table to it's original file, return 0 if success
 		int saveTable(char *fileName);//Save the table to certain file,
 
+		int editItem(int position, char *field);//edit an item, return 0 if success, return -1 if there are repeatation
+		int searchItem(char *field);//search an item, return its position
 		int insertItem(int position,class item *newItem,class data repeat);//insert a list of data, return 0 if success
 		int insertData(class line* after, class line* newLine);//insert a list of data after "after", return 0 if success
 		int insertData(int position, class line *newLine);//insert a line of data, return 0 if success
@@ -179,9 +185,11 @@ class table{
 
 		class table *selectPart(int x,int y,int h,int w);//select part of the table and generate a new table.
 		int searchItem(char *name,int strLen);//search item by name, return position
-		class table *searchData(int itemPosition,class data,int lowerRange=0,int upperRange=0);//search by Data, return a table including all search results
+		class table *searchDataString(int itemPosition,class data source,int lowerRange=0,int upperRange=0);//search by Data, return a table including all search results
+		class table *searchDataNum(int itemPosition,class data source,int relation,int lowerRange=0,int upperRange=0);//search by Data, return a table including all search results
 		void replaceData(class data,class data newData,int itemPosition=-1,int lowerRange=0,int upperRange=0);//replace data, return a table including all search results
 
+		unsigned int hash();
 		class line *operator[](int row);
 };
 
