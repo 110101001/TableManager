@@ -206,6 +206,13 @@ int commandLine(){
 	if(0==strcmp(input,"q")){
 		return -1;
 	}
+	else if(0==strcmp(input,"w")){
+		displaying->saveTable();
+	}
+	else if(0==strcmp(input,"wq")){
+		displaying->saveTable();
+		return -1;
+	}
 	else if(0==strcmp(input,"j")){
 		int position;
 		mvwaddstr(commandWindow,1,1,emptyLine);	
@@ -217,6 +224,19 @@ int commandLine(){
 			x=position-1;
 			wmove(tableWindow,1+curx,1+10*(1+cury));
 			displayTable(x,y);
+			/* time test code
+			char displayStr[100];
+			double dur;
+			clock_t start,end;
+			start = clock();
+			displaying->locateLine(curx+x);
+			end = clock();
+			dur = (double)(end - start);
+			mvwaddstr(commandWindow,1,1,emptyLine);	
+			sprintf(displayStr,"time cost %f",dur/CLOCKS_PER_SEC);
+			mvwaddstr(commandWindow,1,1,displayStr);
+			wrefresh(commandWindow);
+			*/
 		}
 		else{
 			Err();
@@ -255,10 +275,15 @@ int commandLine(){
 		mvwaddstr(commandWindow,1,1,emptyLine);	
 		mvwaddstr(commandWindow,1,1,"Select table:");
 		wscanw(commandWindow,"%d",&index);
-		displaying=tables[index-1];
-		x=0;y=0;curx=0;cury=0;
-		displayTable(x,y);	
-		displayStatus();
+		if(tables[index-1]==0){
+			Err();
+		}
+		else{
+			displaying=tables[index-1];
+			x=0;y=0;curx=0;cury=0;
+			displayTable(x,y);	
+			displayStatus();
+		}
 	}
 	else if(0==strcmp(input,"compare")){
 		int a,b;

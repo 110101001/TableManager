@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <cstring>
 #include <cmath>
+#include <fstream>
 #include "settings.h"
+
+using namespace std;
 
 table::table(char *_fileName){
 	FILE *file;
@@ -608,8 +611,62 @@ table *table::selectPart(int x,int y,int h,int w){
 	return newTable;
 }
 
+bool hasComma(char *s){
+	if(s==0){
+		return false;
+	}
+	int i=0;
+	while(s[i]!=0){
+		if(s[i]==','){
+			return true;
+		}
+		i++;
+	}
+	return false;
+}
+
+int table::saveTable(){
+	ofstream file(fileName);
+	for(int i=0;i<tableSize.col;i++){
+		if(items[i]->str!=0){
+			if(hasComma(items[i]->str)){
+				file<<"\""<<items[i]->str<<"\"";
+			}
+			else{
+				file<<items[i]->str;
+			}
+		}
+		if(i==tableSize.col-1){
+			file<<endl;
+		}
+		else{
+			file<<",";
+		}
+	}
+	line *present=lineHead;
+	while(present!=0){
+		for(int i=0;i<tableSize.col;i++){
+			char *str=(*present)[i]->Str();
+			if(hasComma(str)){
+				file<<"\""<<str<<"\"";
+			}
+			else{
+				file<<str;
+			}
+			if(i==tableSize.col-1){
+				file<<endl;
+			}
+			else{
+				file<<",";
+			}
+			delete[] str;
+		}
+		present=present->next;
+	}
+	file.close();
+	return 0;
+}
 /*
-int table::saveTable();//Save the table to it's original file, return 0 if success
 int table::saveTable(char *fileName);//Save the table to certain file,
 */
 

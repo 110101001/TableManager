@@ -348,6 +348,9 @@ bool data::isEmpty(){
 }
 
 class data *readString(char *s){
+	if(s[0]==0){
+		return new data;
+	}
 	int i;
 	class data *temp;
 	bool Num=true;
@@ -381,6 +384,10 @@ class data *readString(char *s){
 }
 
 void readString(data *pt,char *s){
+	if(s[0]==0){
+		pt->editData(s,1);
+		return;
+	}
 	int i;
 	bool Num=true;
 	bool point=false;
