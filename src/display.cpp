@@ -64,7 +64,7 @@ line *displayTable(int x,int y){
 		}
 	}
 	posx++;
-	line *firstLine=(*displaying)[x];
+	line *firstLine;//=(*displaying)[x];
 	if(x==lastx+1&&lastTable==displaying){
 		firstLine=lastPos->next;
 		lastPos=firstLine;
@@ -207,7 +207,16 @@ int commandLine(){
 		return -1;
 	}
 	else if(0==strcmp(input,"w")){
-		displaying->saveTable();
+		char inputStr[100];
+		mvwaddstr(commandWindow,1,1,emptyLine);	
+		mvwaddstr(commandWindow,1,1,"file name:");
+		wscanw(commandWindow,"%s",(char*)inputStr);
+		if(inputStr[0]!=0){
+			displaying->saveTable(inputStr);
+		}
+		else{
+			displaying->saveTable();
+		}
 	}
 	else if(0==strcmp(input,"wq")){
 		displaying->saveTable();
@@ -345,25 +354,30 @@ int commandLine(){
 		mvwaddstr(commandWindow,1,1,"Match data:");
 		wscanw(commandWindow,"%s",inputStr);
 		source=readString(inputStr);
-		mvwaddstr(commandWindow,1,1,emptyLine);	
-		mvwaddstr(commandWindow,1,1,"Select item,relation,lowerbound and upperbound:");
-		wscanw(commandWindow,"%s %c %d %d",(char *)inputStr,&relationSymbol,&lb,&ub);
-		pos=displaying->searchItem(inputStr);
-		switch(relationSymbol){
-			case '=':
-				relation=0;
-				break;
-			case '>':
-				relation=1;
-				break;
-			case '<':
-				relation=-1;
-				break;
-		}
 		if(source->isNum){
+			mvwaddstr(commandWindow,1,1,emptyLine);	
+			mvwaddstr(commandWindow,1,1,"Select item,relation,lowerbound and upperbound:");
+			wscanw(commandWindow,"%s %c %d %d",(char *)inputStr,&relationSymbol,&lb,&ub);
+			pos=displaying->searchItem(inputStr);
+
+			switch(relationSymbol){
+				case '=':
+					relation=0;
+					break;
+				case '>':
+					relation=1;
+					break;
+				case '<':
+					relation=-1;
+					break;
+			}
 			newTable=displaying->searchDataNum(pos,*source,relation,lb-1,ub-1);
 		}
 		else{
+			mvwaddstr(commandWindow,1,1,emptyLine);	
+			mvwaddstr(commandWindow,1,1,"Select item,lowerbound and upperbound:");
+			wscanw(commandWindow,"%s %d %d",(char *)inputStr,&lb,&ub);
+			pos=displaying->searchItem(inputStr);
 			newTable=displaying->searchDataString(pos,*source,lb-1,ub-1);
 		}
 		displaying=tables[insertTable(newTable)];

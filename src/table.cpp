@@ -666,9 +666,49 @@ int table::saveTable(){
 	file.close();
 	return 0;
 }
-/*
-int table::saveTable(char *fileName);//Save the table to certain file,
-*/
+
+int table::saveTable(char *_fileName){
+	ofstream file(_fileName);
+	for(int i=0;i<tableSize.col;i++){
+		if(items[i]->str!=0){
+			if(hasComma(items[i]->str)){
+				file<<"\""<<items[i]->str<<"\"";
+			}
+			else{
+				file<<items[i]->str;
+			}
+		}
+		if(i==tableSize.col-1){
+			file<<endl;
+		}
+		else{
+			file<<",";
+		}
+	}
+	line *present=lineHead;
+	while(present!=0){
+		for(int i=0;i<tableSize.col;i++){
+			char *str=(*present)[i]->Str();
+			if(hasComma(str)){
+				file<<"\""<<str<<"\"";
+			}
+			else{
+				file<<str;
+			}
+			if(i==tableSize.col-1){
+				file<<endl;
+			}
+			else{
+				file<<",";
+			}
+			delete[] str;
+		}
+		present=present->next;
+	}
+	file.close();
+	return 0;
+}
+
 
 class table *table::searchDataString(int itemPosition,class data source,int lowerRange,int upperRange){
 	if(upperRange==0&&lowerRange==0){

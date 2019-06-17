@@ -169,7 +169,7 @@ class table{
 		void updateIndex();//adjust indexPointer
 
 		int saveTable();//Save the table to it's original file, return 0 if success
-		int saveTable(char *fileName);//Save the table to certain file,
+		int saveTable(char *_fileName);//Save the table to certain file,
 
 		int editItem(int position, char *field);//edit an item, return 0 if success, return -1 if there are repeatation
 		int searchItem(char *field);//search an item, return its position

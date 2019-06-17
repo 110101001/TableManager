@@ -356,7 +356,7 @@ class data *readString(char *s){
 	bool Num=true;
 	bool point=false;
 	for(i=0;s[i]!=0;i++){
-		if((s[i]<'0'||s[i]>'9')&&s[i]!='.'){
+		if((s[i]<'0'||s[i]>'9')&&s[i]!='.'||i==0&&s[0]=='-'){
 			Num=false;
 		}
 		if(s[i]=='.'){

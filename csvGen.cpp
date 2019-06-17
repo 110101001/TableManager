@@ -5,9 +5,9 @@ using namespace std;
 
 int main(){
 	cout<<"id,name,height,weight,grade,sex,age"<<endl;
-	for(int i=0;i<10000000;i++){
+	for(int i=0;i<100000;i++){
 		cout<<i+1<<",";
-		int len=4+rand()%6;
+		int len=5+rand()%5;
 		int commaLen=2+rand()%2;
 		cout<<"\"";
 		for(int j=0;j<commaLen;j++){
